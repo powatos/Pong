@@ -1,8 +1,6 @@
 #include "Ponger.hpp"
 
 #include <vector>
-#include <iostream>
-
 #include "TextureManager.hpp"
 
 int Ponger::sizex;
@@ -18,8 +16,5 @@ void Ponger::LoadTexture() {
     for (std::vector<char> row : texture) {
         sizex = row.size() > sizex ? row.size() : sizex;
     }
-    
-    // std::cout << "y: " << sizey << " x: " << sizex << '\n';
-    
     
 }

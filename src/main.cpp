@@ -3,9 +3,12 @@
 #include <sstream>
 #include <cmath>
 
+#ifndef NDEBUG
 #include <chrono> // DEBUG
 #include <iostream> // DEBUG
 #include <iomanip> // DEBUG
+#endif
+
 
 #include "Vector2D.hpp"
 
@@ -16,7 +19,6 @@
 
 unsigned long long FRAME = 0;
 bool FBF = false;
-bool showDebug = false;
 
 constexpr float MAX_SPEED = 50.f;
 constexpr float DRAG_COEF = 3.f;
@@ -31,10 +33,11 @@ std::unique_ptr<Ball> ball;
 float currentAcceleration = 0.f;
 int pongerCollisionDelay = 0;
 
+#ifndef NDEBUG
 long long lf = 0ll;
-
-
 static std::chrono::time_point<std::chrono::high_resolution_clock> start;
+bool showDebug = false;
+
 std::vector<long long> vals;
 void ts(){
     start = std::chrono::high_resolution_clock::now();
@@ -43,6 +46,7 @@ void te(){
     lf = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now() - start).count();
     vals.push_back(lf);
 }
+#endif
 
 bool HandleInput(bool startScreen) {
     int ch = getch();
@@ -71,19 +75,20 @@ bool HandleInput(bool startScreen) {
 		currentAcceleration = 1500.f;
 		break;
 
+	#ifndef NDEBUG
 	case 'p': // frame by frame
 		FBF = !FBF;
 		break;
-		
+
 	case 'o': // debug
 		showDebug = !showDebug;
 		break;
-
 	case 'n':
 	    if (FBF) { break; }
+	#endif
 
 	default:
-		return !FBF; // DEBUG: return false for frame by frame
+		return !FBF; // return false for frame by frame
 		break;
 	}
 
@@ -160,10 +165,8 @@ void UpdateLoop(float DeltaTime) {
     bool at_top_wall = (ball->Position.y <= 0.f);
     bool at_bot_wall = (ball->Position.y >= LINES - Ball::sizey);
     
-    // if (at_bot_wall) { GAME_RUNNING = false; return; }
-    
-    float prevMagnitude = ball->velocity.getMagnitude();
-    
+    if (at_bot_wall) { GAME_RUNNING = false; return; }
+
     if (bCollidingPonger && pongerCollisionDelay == 0) {
         pongerCollisionDelay = 5;
         
@@ -206,6 +209,7 @@ void UpdateLoop(float DeltaTime) {
 
 }
 
+#ifndef NDEBUG
 const char* getDBOut(){
     // static stream to reuse buffer
     static std::ostringstream ss;
@@ -283,6 +287,7 @@ const char* getDBOut(){
     // eturn pointer to static string data.
     return result_string.c_str();
 }
+#endif
 
 void RenderScreen(int screen) {
 	if (ponger == nullptr) return;
@@ -314,9 +319,11 @@ void RenderScreen(int screen) {
     
     	_(Ponger::texture, ponger->Position.x, ponger->Position.y);
     	_(Ball::texture, ball->Position.x, ball->Position.y);
-    	
+
+		#ifndef NDEBUG
     	if (showDebug) { mvprintw(0,0, "%s", getDBOut()); }
-    	
+		#endif
+
 	} else
 	if (screen == 1) {
 	    std::string endMsg = "GAME OVER";
@@ -360,9 +367,6 @@ void RenderScreen(int screen) {
     	    mvaddch(i, 0, '|');
     	    mvaddch(i, COLS-1, '|');
     	}
-    	
-	   // mvprintw(LINES/2-1, (COLS - startMsg0.size())/2, startMsg0.c_str());
-	   // mvprintw(LINES/2, (COLS - startMsg1.size())/2, startMsg1.c_str());
 	}
 	
 	// score
@@ -389,7 +393,7 @@ int main()
 	Vector2D ballSP = pongerSP - Vector2D(0, 10);
 
 	ponger = std::make_unique<Ponger>(pongerSP);
-	ball = std::make_unique<Ball>(ballSP, 20.f);
+	ball = std::make_unique<Ball>(ballSP, 35.f);
 	
 	while (!GAME_STARTED) {
 	    HandleInput(true);
@@ -403,9 +407,7 @@ int main()
 			continue;
 		}
 
-        ts();
 		UpdateLoop(1.f/(float)TARGET_FPS);
-		te();
 
 		RenderScreen(0);
         
@@ -420,10 +422,6 @@ int main()
 
 	
     endwin();
-
-	for (long long val : vals) {
-		std::cout << val << '\n';
-	}
 
 	return 0;
 }

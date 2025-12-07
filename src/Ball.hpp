@@ -3,7 +3,6 @@
 
 #include "Vector2D.hpp"
 
-const Vector2D initialVelocity(10.f, 0.f);
 
 struct Ball {
     Vector2D Position;
